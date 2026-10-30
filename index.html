@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16131a">
+<title>Krazer — Roublard niv. 5</title>
+<style>
+  :root {
+    --bg: #16131a;
+    --card: #221d28;
+    --card-2: #2c2533;
+    --line: #3a3142;
+    --text: #ece6f0;
+    --muted: #a99db3;
+    --accent: #c9a24a;
+    --good: #5fb37a;
+    --bad: #d9655b;
+    --info: #6b9bd1;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  h1, h2, h3 { margin: 0; line-height: 1.2; }
+  h2 { font-size: 1.05rem; color: var(--accent); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
+  h3 { font-size: 1rem; margin-bottom: 4px; }
+  p { margin: 4px 0; }
+  ul { margin: 4px 0; padding-left: 20px; }
+  li { margin: 2px 0; }
+  small, .muted { color: var(--muted); }
+  b, strong { color: #fff; }
+
+  /* ---------- En-tête collant ---------- */
+  header {
+    flex: none; z-index: 10;
+    background: rgba(22, 19, 26, .96); backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+    padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+  }
+  .title-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .title-row h1 { font-size: 1.15rem; }
+  .title-row small { white-space: nowrap; }
+  .quick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
+  .quick div { background: var(--card); border-radius: 8px; text-align: center; padding: 4px 2px; }
+  .quick b { display: block; font-size: 1.05rem; }
+  .quick span { font-size: .7rem; color: var(--muted); text-transform: uppercase; }
+  .quick .hp b { color: var(--good); }
+  .quick .hp.low b { color: var(--bad); }
+
+  .turn { display: flex; gap: 6px; margin-top: 8px; }
+  .chip {
+    flex: 1; border: 1px solid var(--line); background: var(--card); color: var(--text);
+    border-radius: 999px; padding: 7px 4px; font-size: .78rem; font-weight: 600; cursor: pointer;
+  }
+  .chip.used { background: #3a2226; border-color: var(--bad); color: #f2b6b0; text-decoration: line-through; }
+  .chip.reset { flex: 0 0 auto; padding: 7px 12px; background: var(--accent); color: #1a1408; border: 0; }
+
+  /* ---------- Navigation basse ---------- */
+  nav {
+    flex: none; z-index: 10;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: #1d1922; border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav button {
+    background: none; border: 0; color: var(--muted); padding: 10px 0 8px; font-size: .75rem; cursor: pointer;
+  }
+  nav button .ico { display: block; font-size: 1.25rem; margin-bottom: 2px; }
+  nav button.active { color: var(--accent); }
+
+  main { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+    padding: 4px max(12px, calc((100% - 696px) / 2)) 16px; }
+  section.tab { display: none; }
+  section.tab.active { display: block; }
+
+  .card { background: var(--card); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
+  .card.warn { border-left: 4px solid var(--accent); }
+  .card.danger { border-left: 4px solid var(--bad); }
+  .card.tip { border-left: 4px solid var(--info); }
+
+  /* ---------- Compteurs ---------- */
+  .tracker { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .stepper { display: flex; align-items: center; gap: 8px; }
+  .stepper button {
+    width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card-2); color: var(--text); font-size: 1.2rem; cursor: pointer;
+  }
+  .stepper output { min-width: 64px; text-align: center; font-size: 1.3rem; font-weight: 700; }
+  .pips { display: flex; gap: 8px; }
+  .pip {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--accent);
+    background: var(--accent); cursor: pointer;
+  }
+  .pip.spent { background: transparent; }
+  .toggle {
+    border: 1px solid var(--line); background: var(--card-2); color: var(--text);
+    border-radius: 999px; padding: 8px 14px; font-weight: 600; cursor: pointer;
+  }
+  .toggle.on { background: var(--accent); color: #1a1408; border-color: var(--accent); }
+  .row-gap > * + * { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+  /* ---------- Caractéristiques ---------- */
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (min-width: 520px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+  .stat { background: var(--card); border-radius: var(--radius); padding: 10px; }
+  .stat-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .stat-head h3 { font-size: .85rem; text-transform: uppercase; color: var(--muted); }
+  .stat-head .mod { font-size: 1.5rem; font-weight: 800; }
+  .stat-head .val { font-size: .8rem; color: var(--muted); }
+  .skills { list-style: none; padding: 0; margin: 6px 0 0; font-size: .85rem; }
+  .skills li { display: flex; justify-content: space-between; color: var(--muted); }
+  .skills li.prof { color: var(--text); font-weight: 600; }
+  .skills li.prof::before { content: "● "; color: var(--accent); }
+  .skills li.exp::before { content: "◆ "; color: var(--accent); }
+  .skills li span:first-child { flex: 1; }
+
+  /* ---------- Tableaux ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .75rem; text-transform: uppercase; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { white-space: nowrap; font-weight: 700; }
+
+  /* ---------- Combat ---------- */
+  .segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--card); padding: 4px; border-radius: var(--radius); margin: 10px 0; }
+  .segmented button {
+    border: 0; background: none; color: var(--muted); padding: 10px 4px; border-radius: 9px;
+    font-weight: 700; font-size: .82rem; cursor: pointer;
+  }
+  .segmented button.active { background: var(--accent); color: #1a1408; }
+  .steps { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+  .steps li { counter-increment: step; position: relative; padding: 10px 0 10px 40px; border-bottom: 1px solid var(--line); }
+  .steps li:last-child { border-bottom: 0; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 28px; height: 28px; border-radius: 50%; background: var(--card-2); color: var(--accent);
+    display: grid; place-items: center; font-weight: 800;
+  }
+  .tag { display: inline-block; font-size: .7rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-right: 4px; vertical-align: 1px; }
+  .tag.action { background: #3b2f12; color: var(--accent); }
+  .tag.bonus { background: #17324a; color: #9cc4ee; }
+  .tag.free { background: #1f3a27; color: #9bd6ac; }
+  .tag.move { background: #33283d; color: #cdb6e3; }
+  .roll { display: block; margin-top: 2px; font-size: .85rem; color: var(--muted); }
+  .roll b { color: var(--text); }
+  .avg { font-size: 1.6rem; font-weight: 800; color: var(--accent); }
+  .pros li::marker { content: "✅ "; }
+  .cons li::marker { content: "❌ "; }
+  .warns li::marker { content: "⚠️ "; }
+
+  /* ---------- Inventaire ---------- */
+  .money { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .money label { display: flex; flex-direction: column; align-items: center; font-size: .72rem; color: var(--muted); }
+  .money input {
+    width: 100%; margin-top: 3px; text-align: center; font-size: 1rem; font-weight: 700;
+    background: var(--card-2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 2px;
+  }
+  .items { list-style: none; padding: 0; margin: 0; }
+  .items li { padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .items li:last-child { border-bottom: 0; }
+  .items .magic { color: #d9b8ff; font-weight: 600; }
+  .items .magic::before { content: "✦ "; }
+
+  details { background: var(--card); border-radius: var(--radius); margin-bottom: 10px; }
+  details > summary { padding: 12px; font-weight: 700; cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after { content: "▾"; color: var(--muted); }
+  details[open] > summary::after { content: "▴"; }
+  details > div { padding: 0 12px 12px; }
+  .src { font-size: .72rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <h1>Krazer</h1>
+    <small class="muted">Orc · Roublard (Voleur) · niv. 5</small>
+  </div>
+  <div class="quick">
+    <div><b>14</b><span>CA</span></div>
+    <div class="hp" id="quick-hp"><b id="quick-hp-value">33</b><span>PV</span></div>
+    <div><b>+3</b><span>Init</span></div>
+    <div><b>9m</b><span>Vit.</span></div>
+    <div><b>+3</b><span>Maît.</span></div>
+  </div>
+  <div class="turn" aria-label="Ressources du tour">
+    <button class="chip" data-turn="sneak" title="1 fois par tour">🗡️ Sournoise</button>
+    <button class="chip" data-turn="bonus" title="Ruse, Visée stable, Main leste, Poussée d'adrénaline">⚡ Bonus</button>
+    <button class="chip" data-turn="reaction" title="Esquive instinctive">🛡️ Réaction</button>
+    <button class="chip reset" id="new-turn" title="Nouveau tour">↻</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= RÉCAP ================= -->
+<section class="tab active" id="tab-recap">
+
+  <h2>À ne pas oublier</h2>
+  <div class="card warn">
+    <ul>
+      <li><b>Attaque sournoise 3d6</b>, 1×/tour : il faut l'<b>avantage</b> ou un <b>allié à 1,5m</b> de la cible, et <b>pas de désavantage</b>.</li>
+      <li><b>Frappe rusée</b> sur l'Attaque sournoise : Poison, Croc-en-jambe ou Repli (−1d6 chacun, <b>DD 14</b>).</li>
+      <li><b>Esquive instinctive</b> (réaction) : divise par deux les dégâts d'une attaque qui te touche.</li>
+      <li><b>Seconde dague</b> (Coup double) : 1d4 <b>sans le +3</b>.</li>
+      <li><b>Bottes elfiques</b> : avantage en Discrétion.</li>
+      <li><b>Acharnement</b> : à 0 PV, tu restes à 1 PV (1×/repos long).</li>
+    </ul>
+  </div>
+
+  <h2>Points de vie</h2>
+  <div class="card row-gap">
+    <div class="tracker">
+      <div><b>PV</b> <small>/ 33</small></div>
+      <div class="stepper">
+        <button data-step="hp" data-delta="-1" aria-label="Retirer 1 PV">−</button>
+        <output id="hp">33</output>
+        <button data-step="hp" data-delta="1" aria-label="Ajouter 1 PV">+</button>
+      </div>
+    </div>
+    <div class="tracker">
+      <div><b>PV temporaires</b></div>
+      <div class="stepper">
+        <button data-step="tempHp" data-delta="-1" aria-label="Retirer 1 PV temporaire">−</button>
+        <output id="tempHp">0</output>
+        <button data-step="tempHp" data-delta="1" aria-label="Ajouter 1 PV temporaire">+</button>
+      </div>
+    </div>
+    <div class="tracker">
+      <div><b>Dés de vie</b> <small>d8 + 1</small></div>
+      <div class="pips" data-pips="hitDice" data-count="5"></div>
+    </div>
+  </div>
+
+  <h2>Ressources</h2>
+  <div class="card row-gap">
+    <div class="tracker">
+      <div><b>Poussée d'adrénaline</b><br><small>Foncer en action bonus + 3 PV temp. · repos court</small></div>
+      <div class="pips" data-pips="adrenaline" data-count="3"></div>
+    </div>
+    <div class="tracker">
+      <div><b>Acharnement</b><br><small>0 PV → 1 PV · repos long</small></div>
+      <div class="pips" data-pips="relentless" data-count="1"></div>
+    </div>
+    <div class="tracker">
+      <div><b>Inspiration héroïque</b><br><small>Relancer un dé</small></div>
+      <button class="toggle" id="inspiration">Oui</button>
+    </div>
+    <div class="tracker">
+      <div><b>Repos long</b><br><small>PV au max, tout recharger</small></div>
+      <button class="toggle" id="long-rest">Repos</button>
+    </div>
+  </div>
+
+  <h2>Caractéristiques</h2>
+  <p class="muted" style="margin-bottom:8px">● maîtrise · ◆ expertise</p>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-head"><h3>Force</h3><span class="val">12</span></div>
+      <div class="stat-head"><span class="mod">+1</span></div>
+      <ul class="skills">
+        <li><span>Sauvegarde</span><span>+1</span></li>
+        <li><span>Athlétisme</span><span>+1</span></li>
+      </ul>
+    </div>
+    <div class="stat">
+      <div class="stat-head"><h3>Dextérité</h3><span class="val">17</span></div>
+      <div class="stat-head"><span class="mod">+3</span></div>
+      <ul class="skills">
+        <li class="prof"><span>Sauvegarde</span><span>+6</span></li>
+        <li><span>Acrobaties</span><span>+3</span></li>
+        <li class="prof"><span>Discrétion</span><span>+6</span></li>
+        <li class="prof exp"><span>Escamotage</span><span>+9</span></li>
+      </ul>
+    </div>
+    <div class="stat">
+      <div class="stat-head"><h3>Constitution</h3><span class="val">13</span></div>
+      <div class="stat-head"><span class="mod">+1</span></div>
+      <ul class="skills">
+        <li><span>Sauvegarde</span><span>+1</span></li>
+      </ul>
+    </div>
+    <div class="stat">
+      <div class="stat-head"><h3>Intelligence</h3><span class="val">14</span></div>
+      <div class="stat-head"><span class="mod">+2</span></div>
+      <ul class="skills">
+        <li class="prof"><span>Sauvegarde</span><span>+5</span></li>
+        <li><span>Arcanes</span><span>+2</span></li>
+        <li><span>Histoire</span><span>+2</span></li>
+        <li><span>Investigation</span><span>+2</span></li>
+        <li><span>Nature</span><span>+2</span></li>
+        <li><span>Religion</span><span>+2</span></li>
+      </ul>
+    </div>
+    <div class="stat">
+      <div class="stat-head"><h3>Sagesse</h3><span class="val">10</span></div>
+      <div class="stat-head"><span class="mod">+0</span></div>
+      <ul class="skills">
+        <li><span>Sauvegarde</span><span>+0</span></li>
+        <li><span>Dressage</span><span>+0</span></li>
+        <li><span>Intuition</span><span>+0</span></li>
+        <li class="prof"><span>Médecine</span><span>+3</span></li>
+        <li><span>Perception</span><span>+0</span></li>
+        <li><span>Survie</span><span>+0</span></li>
+      </ul>
+    </div>
+    <div class="stat">
+      <div class="stat-head"><h3>Charisme</h3><span class="val">12</span></div>
+      <div class="stat-head"><span class="mod">+1</span></div>
+      <ul class="skills">
+        <li><span>Sauvegarde</span><span>+1</span></li>
+        <li class="prof"><span>Intimidation</span><span>+4</span></li>
+        <li class="prof exp"><span>Persuasion</span><span>+7</span></li>
+        <li><span>Tromperie</span><span>+1</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Profil</h2>
+  <div class="card">
+    <table>
+      <tr><td>Perception passive</td><td class="num">10</td></tr>
+      <tr><td>Vision dans le noir</td><td class="num">36m</td></tr>
+      <tr><td>Taille</td><td class="num">1,8m</td></tr>
+      <tr><td>Alignement</td><td class="num">Neutre / bon</td></tr>
+      <tr><td>Langues</td><td>Commun, Halfelin, Commun des signes, Druidique, Argot des voleurs</td></tr>
+      <tr><td>Armures</td><td>Légères</td></tr>
+      <tr><td>Armes</td><td>Simples, de guerre avec finesse</td></tr>
+      <tr><td>Outils</td><td>Kit de contrefaçon, Outils de voleur, Kit d'empoisonneur, Outils de cartographe</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ================= COMBAT ================= -->
+<section class="tab" id="tab-combat">
+  <div class="segmented" role="tablist">
+    <button data-style="dagues" class="active">🗡️🗡️ Dagues</button>
+    <button data-style="ouverture">⚔️ Ouverture</button>
+    <button data-style="arc">🏹 Embuscade</button>
+  </div>
+
+  <!-- Style 1 -->
+  <div class="combat-style" data-style="dagues">
+    <div class="card">
+      <h3>Double dague + désengagement</h3>
+      <p class="muted">Quand : un <b>allié est au contact</b> de la cible.</p>
+    </div>
+    <div class="card">
+      <ol class="steps">
+        <li><span class="tag action">Action</span><b>Dague</b>
+          <span class="roll">Toucher <b>d20 + 6</b> · Dégâts <b>1d4 + 3</b> perçant</span></li>
+        <li><span class="tag free">Dans l'action</span><b>Seconde dague</b> (Coup double)
+          <span class="roll">Toucher <b>d20 + 6</b> · Dégâts <b>1d4</b> (sans +3)</span></li>
+        <li><span class="tag free">1×/tour</span><b>Attaque sournoise</b> sur la 1<sup>re</sup> qui touche
+          <span class="roll"><b>3d6</b>, moins les dés de Frappe rusée</span></li>
+        <li><span class="tag bonus">Action bonus</span><b>Ruse : se désengager</b></li>
+        <li><span class="tag move">Mouvement</span><b>Reculer</b>
+          <span class="roll">Jusqu'à 9m, sans attaque d'opportunité</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <p class="muted">Moyenne si tout touche</p>
+      <div class="avg">~18</div>
+      <small>5,5 + 2,5 + 10,5</small>
+    </div>
+    <div class="card">
+      <ul class="pros">
+        <li>Deux chances de placer l'Attaque sournoise.</li>
+        <li>Tu repars sans risque.</li>
+      </ul>
+      <ul class="cons">
+        <li>Il faut un allié au contact de la cible.</li>
+        <li>Les dégâts de base sont faibles.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Style 2 -->
+  <div class="combat-style" data-style="ouverture" hidden>
+    <div class="card">
+      <h3>Ouverture : épée courte + dague</h3>
+      <p class="muted">Quand : tu es <b>seul au contact</b> de la cible.</p>
+    </div>
+    <div class="card">
+      <ol class="steps">
+        <li><span class="tag action">Action</span><b>Épée courte</b> (Ouverture)
+          <span class="roll">Toucher <b>d20 + 6</b> · Dégâts <b>1d6 + 3</b> perçant</span>
+          <span class="roll">Si elle touche → <b>avantage</b> sur ta prochaine attaque contre cette cible</span></li>
+        <li><span class="tag free">Dans l'action</span><b>Dague</b> (Coup double)
+          <span class="roll">Toucher <b>d20 + 6 avec avantage</b> · Dégâts <b>1d4</b></span></li>
+        <li><span class="tag free">1×/tour</span><b>Attaque sournoise</b> sur la dague
+          <span class="roll"><b>3d6</b>, moins les dés de Frappe rusée</span></li>
+        <li><span class="tag bonus">Action bonus</span><b>Ruse : se désengager</b></li>
+      </ol>
+    </div>
+    <div class="card">
+      <p class="muted">Moyenne si tout touche</p>
+      <div class="avg">~19,5</div>
+      <small>6,5 + 2,5 + 10,5</small>
+    </div>
+    <div class="card">
+      <ul class="pros">
+        <li>L'épée crée elle-même l'avantage, donc l'Attaque sournoise passe <b>sans allié</b>.</li>
+        <li>L'avantage non utilisé reste valable jusqu'à la fin de ton prochain tour.</li>
+      </ul>
+      <ul class="cons">
+        <li>Si l'épée rate, tu n'as pas d'avantage. Il faut alors un allié au contact.</li>
+      </ul>
+      <ul class="warns">
+        <li>Épée courte en main principale, dague en seconde main.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Style 3 -->
+  <div class="combat-style" data-style="arc" hidden>
+    <div class="card">
+      <h3>Tireur embusqué (arc court)</h3>
+      <p class="muted">Quand : il y a de la <b>distance</b> et un <b>abri</b>. Le plus optimisé.</p>
+    </div>
+    <div class="card">
+      <ol class="steps">
+        <li><span class="tag bonus">Action bonus</span><b>Visée stable</b>, si tu n'es pas déjà caché
+          <span class="roll">Seulement si tu ne t'es pas déplacé · avantage · vitesse 0 ce tour</span></li>
+        <li><span class="tag action">Action</span><b>Tir à l'arc court</b> avec avantage
+          <span class="roll">Toucher <b>d20 + 6</b> · Dégâts <b>1d6 + 3</b> perçant</span></li>
+        <li><span class="tag free">1×/tour</span><b>Attaque sournoise</b>
+          <span class="roll"><b>3d6</b></span></li>
+        <li><span class="tag bonus">Action bonus</span><b>Ruse : se cacher</b> derrière un abri
+          <span class="roll">Discrétion <b>d20 + 6 avec avantage</b> (bottes) · DD 15</span></li>
+      </ol>
+    </div>
+    <div class="card tip">
+      <h3>La boucle</h3>
+      <ul>
+        <li><b>Tour 1</b> : Visée stable → tir → Attaque sournoise.</li>
+        <li><b>Ensuite</b> : caché → tu sors, tu tires avec avantage → tu retournes à l'abri et tu te caches.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p class="muted">Moyenne par tour</p>
+      <div class="avg">~17</div>
+      <small>6,5 + 10,5, presque à chaque tour et sans prendre de coups</small>
+    </div>
+    <div class="card">
+      <ul class="pros">
+        <li>L'Attaque sournoise passe sans dépendre d'un allié.</li>
+        <li>Avec les bottes elfiques, te cacher est presque garanti.</li>
+        <li>Tu restes loin des ennemis (33 PV).</li>
+      </ul>
+      <ul class="cons">
+        <li>Visée stable n'est pas compatible avec un déplacement.</li>
+        <li>Il faut un abri important ou une zone très obscurcie.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Frappe rusée · DD 14</h2>
+  <div class="card">
+    <table>
+      <tr><th>Effet</th><th>Coût</th><th>Résultat</th></tr>
+      <tr><td><b>Poison</b></td><td class="num">−1d6</td><td>JS CON, sinon empoisonnée 1 min (désavantage à ses attaques). Contre une brute qui frappe fort.</td></tr>
+      <tr><td><b>Croc-en-jambe</b></td><td class="num">−1d6</td><td>JS DEX, sinon à terre (taille G max). Tes alliés au contact ont l'avantage.</td></tr>
+      <tr><td><b>Repli</b></td><td class="num">−1d6</td><td>Moitié de ta vitesse sans attaque d'opportunité. Ton action bonus reste libre pour te cacher.</td></tr>
+    </table>
+  </div>
+
+  <h2>Armes</h2>
+  <div class="card">
+    <table>
+      <tr><th>Arme</th><th>Toucher</th><th>Dégâts</th><th>Botte</th></tr>
+      <tr><td>Dague</td><td class="num">+6</td><td class="num">1d4+3</td><td>Coup double</td></tr>
+      <tr><td>Épée courte</td><td class="num">+6</td><td class="num">1d6+3</td><td>Ouverture</td></tr>
+      <tr><td>Arc court</td><td class="num">+6</td><td class="num">1d6+3</td><td>—</td></tr>
+    </table>
+  </div>
+
+  <h2>Quel style quand ?</h2>
+  <div class="card">
+    <table>
+      <tr><td>Allié au contact de la cible</td><td><b>Dagues</b></td></tr>
+      <tr><td>Seul au contact</td><td><b>Ouverture</b></td></tr>
+      <tr><td>Distance + abri</td><td><b>Embuscade</b></td></tr>
+      <tr><td>Grosse brute</td><td>+ <b>Poison</b></td></tr>
+      <tr><td>Ennemi à faire tomber</td><td>+ <b>Croc-en-jambe</b></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ================= INVENTAIRE ================= -->
+<section class="tab" id="tab-inventaire">
+  <h2>Argent</h2>
+  <div class="card">
+    <div class="money">
+      <label>PC<input type="number" inputmode="numeric" data-money="pc"></label>
+      <label>PA<input type="number" inputmode="numeric" data-money="pa"></label>
+      <label>PE<input type="number" inputmode="numeric" data-money="pe"></label>
+      <label>PO<input type="number" inputmode="numeric" data-money="po"></label>
+      <label>PP<input type="number" inputmode="numeric" data-money="pp"></label>
+    </div>
+  </div>
+
+  <h2>Consommables</h2>
+  <div class="card row-gap">
+    <div class="tracker">
+      <div><b>Flèches</b></div>
+      <div class="stepper">
+        <button data-step="arrows" data-delta="-1" aria-label="Retirer une flèche">−</button>
+        <output id="arrows">20</output>
+        <button data-step="arrows" data-delta="1" aria-label="Ajouter une flèche">+</button>
+      </div>
+    </div>
+    <div class="tracker">
+      <div><b>Potions</b></div>
+      <div class="stepper">
+        <button data-step="potions" data-delta="-1" aria-label="Retirer une potion">−</button>
+        <output id="potions">1</output>
+        <button data-step="potions" data-delta="1" aria-label="Ajouter une potion">+</button>
+      </div>
+    </div>
+  </div>
+
+  <h2>Objets magiques</h2>
+  <div class="card">
+    <ul class="items">
+      <li><span class="magic">Bottes elfiques</span><br><small>Avantage en Discrétion · pas silencieux</small></li>
+      <li><span class="magic">Amulette</span><br><small>Ne peut être ciblé ni perçu par les sorts de divination</small></li>
+      <li><span class="magic">Fiole d'insaisissabilité</span></li>
+      <li><span class="magic">Armure en mithral</span><br><small>CA à voir avec le MJ</small></li>
+    </ul>
+  </div>
+
+  <h2>Équipement</h2>
+  <div class="card">
+    <ul class="items">
+      <li>Armure de cuir <small>(CA 11 + DEX)</small></li>
+      <li>Épée courte</li>
+      <li>Dagues ×2</li>
+      <li>Arc court + carquois</li>
+      <li>Outils de voleur</li>
+      <li>Kit de contrefaçon</li>
+      <li>Costume</li>
+      <li>Vêtements de luxe</li>
+      <li>1 joyau</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= CLASSE ================= -->
+<section class="tab" id="tab-classe">
+  <h2>Capacités de Roublard</h2>
+
+  <details open>
+    <summary>Attaque sournoise · 3d6</summary>
+    <div>1×/tour, sur une attaque qui touche avec une arme de finesse ou à distance. Il faut l'avantage, ou un allié à 1,5m de la cible qui n'est pas neutralisé, et pas de désavantage.</div>
+  </details>
+  <details open>
+    <summary>Frappe rusée · DD 14</summary>
+    <div>Quand tu infliges ton Attaque sournoise, tu retires des d6 pour ajouter un effet :
+      <ul>
+        <li><b>Poison</b> (1d6) : JS CON, sinon empoisonnée 1 minute. Il faut le kit d'empoisonneur.</li>
+        <li><b>Croc-en-jambe</b> (1d6) : JS DEX, sinon à terre (taille G ou moins).</li>
+        <li><b>Repli</b> (1d6) : moitié de ta vitesse sans attaque d'opportunité.</li>
+      </ul>
+    </div>
+  </details>
+  <details open>
+    <summary>Esquive instinctive <span class="src">réaction</span></summary>
+    <div>Quand un attaquant que tu vois te touche, tu divises les dégâts de l'attaque par deux.</div>
+  </details>
+  <details>
+    <summary>Ruse <span class="src">action bonus</span></summary>
+    <div>Se cacher, foncer ou se désengager.</div>
+  </details>
+  <details>
+    <summary>Visée stable <span class="src">action bonus</span></summary>
+    <div>Si tu ne t'es pas encore déplacé ce tour : avantage sur ta prochaine attaque, mais ta vitesse tombe à 0 jusqu'à la fin du tour.</div>
+  </details>
+  <details>
+    <summary>Expertise</summary>
+    <div>Escamotage (+9) et Persuasion (+7) : bonus de maîtrise doublé.</div>
+  </details>
+  <details>
+    <summary>Bottes d'arme <span class="src">2 max</span></summary>
+    <div>
+      <ul>
+        <li><b>Coup double</b> (dague) : la seconde attaque d'arme légère se fait dans l'action, pas en action bonus.</li>
+        <li><b>Ouverture</b> (épée courte) : si tu touches, tu as l'avantage sur ta prochaine attaque contre cette cible avant la fin de ton prochain tour.</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary>Argot des voleurs</summary>
+    <div>Langage secret de signes, symboles et jargon pour faire passer des messages cachés.</div>
+  </details>
+
+  <h2>Voleur</h2>
+  <details>
+    <summary>Main leste <span class="src">action bonus</span></summary>
+    <div>Escamotage, ou utiliser un objet.</div>
+  </details>
+  <details>
+    <summary>Escaladeur / sauteur</summary>
+    <div>Vitesse d'escalade égale à ta vitesse. Tu utilises la DEX plutôt que la FOR pour la distance de saut.</div>
+  </details>
+
+  <h2>Orc</h2>
+  <details>
+    <summary>Poussée d'adrénaline <span class="src">3 / repos court</span></summary>
+    <div>Action bonus : foncer, et gagner 3 PV temporaires.</div>
+  </details>
+  <details>
+    <summary>Acharnement <span class="src">1 / repos long</span></summary>
+    <div>Si tu tombes à 0 PV sans être tué, tu restes à 1 PV.</div>
+  </details>
+  <details>
+    <summary>Vision dans le noir · 36m</summary>
+    <div>Tu vois dans l'obscurité comme en lumière faible, en nuances de gris.</div>
+  </details>
+</section>
+
+</main>
+
+<nav>
+  <button data-tab="recap" class="active"><span class="ico">📜</span>Récap</button>
+  <button data-tab="combat"><span class="ico">⚔️</span>Combat</button>
+  <button data-tab="inventaire"><span class="ico">🎒</span>Inventaire</button>
+  <button data-tab="classe"><span class="ico">🗝️</span>Classe</button>
+</nav>
+
+<script>
+  const STORAGE_KEY = 'krazer-niv5';
+  const MAX_HP = 33;
+  const DEFAULT_STATE = {
+    tab: 'recap',
+    combatStyle: 'dagues',
+    hp: MAX_HP,
+    tempHp: 0,
+    arrows: 20,
+    potions: 1,
+    inspiration: true,
+    pips: { hitDice: 0, adrenaline: 0, relentless: 0 },
+    turn: { sneak: false, bonus: false, reaction: false },
+    money: { pc: 0, pa: 5, pe: 0, po: 834, pp: 0 },
+  };
+  const STEP_LIMITS = { hp: [0, MAX_HP], tempHp: [0, 99], arrows: [0, 999], potions: [0, 99] };
+
+  function loadState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return saved ? { ...DEFAULT_STATE, ...saved,
+        pips: { ...DEFAULT_STATE.pips, ...saved.pips },
+        turn: { ...DEFAULT_STATE.turn, ...saved.turn },
+        money: { ...DEFAULT_STATE.money, ...saved.money } } : structuredClone(DEFAULT_STATE);
+    } catch (error) {
+      console.error('Lecture de la sauvegarde impossible', error);
+      return structuredClone(DEFAULT_STATE);
+    }
+  }
+
+  const state = loadState();
+  const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+  function showTab(tabName) {
+    document.querySelectorAll('nav button').forEach(button => button.classList.toggle('active', button.dataset.tab === tabName));
+    document.querySelectorAll('section.tab').forEach(section => section.classList.toggle('active', section.id === `tab-${tabName}`));
+    state.tab = tabName;
+    saveState();
+    document.querySelector('main').scrollTo(0, 0);
+  }
+
+  function showCombatStyle(styleName) {
+    document.querySelectorAll('.segmented button').forEach(button => button.classList.toggle('active', button.dataset.style === styleName));
+    document.querySelectorAll('.combat-style').forEach(block => block.hidden = block.dataset.style !== styleName);
+    state.combatStyle = styleName;
+    saveState();
+  }
+
+  function renderCounters() {
+    Object.keys(STEP_LIMITS).forEach(key => document.getElementById(key).textContent = state[key]);
+    const hpLabel = state.tempHp > 0 ? `${state.hp}+${state.tempHp}` : state.hp;
+    document.getElementById('quick-hp-value').textContent = hpLabel;
+    document.getElementById('quick-hp').classList.toggle('low', state.hp <= MAX_HP / 3);
+  }
+
+  function renderPips() {
+    document.querySelectorAll('[data-pips]').forEach(container => {
+      const spent = state.pips[container.dataset.pips];
+      container.querySelectorAll('.pip').forEach((pip, index) => pip.classList.toggle('spent', index < spent));
+    });
+  }
+
+  function renderTurn() {
+    document.querySelectorAll('[data-turn]').forEach(chip => chip.classList.toggle('used', state.turn[chip.dataset.turn]));
+  }
+
+  function renderInspiration() {
+    const button = document.getElementById('inspiration');
+    button.classList.toggle('on', state.inspiration);
+    button.textContent = state.inspiration ? 'Oui' : 'Non';
+  }
+
+  function stepCounter(event) {
+    const { step: key, delta } = event.currentTarget.dataset;
+    const [min, max] = STEP_LIMITS[key];
+    state[key] = Math.min(max, Math.max(min, state[key] + Number(delta)));
+    renderCounters();
+    saveState();
+  }
+
+  function togglePip(event) {
+    const pip = event.currentTarget;
+    const key = pip.parentElement.dataset.pips;
+    const index = Number(pip.dataset.index);
+    state.pips[key] = state.pips[key] > index ? index : index + 1;
+    renderPips();
+    saveState();
+  }
+
+  function toggleTurnResource(event) {
+    const key = event.currentTarget.dataset.turn;
+    state.turn[key] = !state.turn[key];
+    renderTurn();
+    saveState();
+  }
+
+  function startNewTurn() {
+    state.turn = { sneak: false, bonus: false, reaction: false };
+    renderTurn();
+    saveState();
+  }
+
+  function toggleInspiration() {
+    state.inspiration = !state.inspiration;
+    renderInspiration();
+    saveState();
+  }
+
+  function takeLongRest() {
+    if (!confirm('Repos long : PV au max et ressources rechargées ?')) return;
+    state.hp = MAX_HP;
+    state.tempHp = 0;
+    state.pips.adrenaline = 0;
+    state.pips.relentless = 0;
+    state.pips.hitDice = 0;
+    startNewTurn();
+    renderCounters();
+    renderPips();
+    saveState();
+  }
+
+  function saveMoney(event) {
+    state.money[event.target.dataset.money] = Number(event.target.value) || 0;
+    saveState();
+  }
+
+  document.querySelectorAll('[data-pips]').forEach(container => {
+    for (let index = 0; index < Number(container.dataset.count); index++) {
+      const pip = document.createElement('button');
+      pip.className = 'pip';
+      pip.dataset.index = index;
+      pip.setAttribute('aria-label', `Utilisation ${index + 1}`);
+      pip.addEventListener('click', togglePip);
+      container.appendChild(pip);
+    }
+  });
+  document.querySelectorAll('[data-money]').forEach(input => {
+    input.value = state.money[input.dataset.money];
+    input.addEventListener('change', saveMoney);
+  });
+  document.querySelectorAll('nav button').forEach(button => button.addEventListener('click', () => showTab(button.dataset.tab)));
+  document.querySelectorAll('.segmented button').forEach(button => button.addEventListener('click', () => showCombatStyle(button.dataset.style)));
+  document.querySelectorAll('[data-step]').forEach(button => button.addEventListener('click', stepCounter));
+  document.querySelectorAll('[data-turn]').forEach(chip => chip.addEventListener('click', toggleTurnResource));
+  document.getElementById('new-turn').addEventListener('click', startNewTurn);
+  document.getElementById('inspiration').addEventListener('click', toggleInspiration);
+  document.getElementById('long-rest').addEventListener('click', takeLongRest);
+
+  showTab(state.tab);
+  showCombatStyle(state.combatStyle);
+  renderCounters();
+  renderPips();
+  renderTurn();
+  renderInspiration();
+</script>
+</body>
+</html>
