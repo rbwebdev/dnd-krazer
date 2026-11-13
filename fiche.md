@@ -2,7 +2,7 @@
 #### Perso DnD 2024
 
 ## Combat
-- Classe d'armure 14 (armure de cuir 11 + DEX 3)
+- Classe d'armure 15 (Armure de cuir clouté 12 + DEX 3)
 - PV 33
 - Dés de vie 5d8
 - Initiative +3
@@ -13,7 +13,7 @@
 ## Profil
 - Taille 1.8m
 - Alignement neutre/bon
-- Argent 0PC / 5PA / 0PE / 834PO / 0PP
+- Argent 0PC / 5PA / 0PE / 1076PO / 0PP
 - escaladeur / sauteur
 
 - [x] Inspiration héroïque
@@ -108,9 +108,12 @@ Réaction : quand un attaquant que tu vois te touche, tu divises les dégâts de
 - Argot des voleurs
 
 ## Équipement
+- 1 Palan
+- 1 corde
+- 1 grappin
+- Billes
 - 1 potion
-- Armure en cuir
-- Armure en mithral
+- Armure de cuir clouté
 - Épée courte
 - Dagues ×2
 - Arc court
