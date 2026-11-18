@@ -13,7 +13,7 @@
 ## Profil
 - Taille 1.8m
 - Alignement neutre/bon
-- Argent 0PC / 5PA / 0PE / 1076PO / 0PP
+- Argent 0PC / 5PA / 0PE / 2076PO / 0PP
 - escaladeur / sauteur
 
 - [x] Inspiration héroïque
@@ -112,7 +112,8 @@ Réaction : quand un attaquant que tu vois te touche, tu divises les dégâts de
 - 1 corde
 - 1 grappin
 - Billes
-- 1 potion
+- 2 potions
+- poussière de disparition
 - Armure de cuir clouté
 - Épée courte
 - Dagues ×2
