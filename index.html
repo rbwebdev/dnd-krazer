@@ -517,7 +517,7 @@
       <div><b>Potions</b></div>
       <div class="stepper">
         <button data-step="potions" data-delta="-1" aria-label="Retirer une potion">−</button>
-        <output id="potions">1</output>
+        <output id="potions">2</output>
         <button data-step="potions" data-delta="1" aria-label="Ajouter une potion">+</button>
       </div>
     </div>
@@ -548,6 +548,7 @@
       <li>1 palan</li>
       <li>1 grappin</li>
       <li>Billes</li>
+      <li>1 poussière de disparition</li>
     </ul>
   </div>
 </section>
@@ -643,11 +644,11 @@
     hp: MAX_HP,
     tempHp: 0,
     arrows: 20,
-    potions: 1,
+    potions: 2,
     inspiration: true,
     pips: { hitDice: 0, adrenaline: 0, relentless: 0 },
     turn: { sneak: false, bonus: false, reaction: false },
-    money: { pc: 0, pa: 5, pe: 0, po: 1076, pp: 0 },
+    money: { pc: 0, pa: 5, pe: 0, po: 2076, pp: 0 },
   };
   const STEP_LIMITS = { hp: [0, MAX_HP], tempHp: [0, 99], arrows: [0, 999], potions: [0, 99] };
 
